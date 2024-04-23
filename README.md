@@ -9,8 +9,6 @@ This is the 2.0 development branch of NervesHubLink. If you have been using Nerv
 
 ---
 
-This is the official client for devices that want to receive firmware updates from NervesHub.
-
 ## Overview
 
 [NervesHub](https://www.nerves-hub.org/) is an open-source IoT fleet management server that is built specifically for Nerves-based devices.
@@ -34,12 +32,7 @@ Many of the steps below can be automated by NervesHub users to set up automatic 
 
 ### Adding NervesHubLink to your project
 
-<<<<<<< Updated upstream
-The first step is to add `nerves_hub_link` to your target dependencies in your
-project's `mix.exs`. For example:
-=======
 The first step is to add `nerves_hub_link` to your target dependencies in your project's `mix.exs`. For example:
->>>>>>> Stashed changes
 
 ```elixir
   defp deps(target) do
@@ -51,9 +44,11 @@ The first step is to add `nerves_hub_link` to your target dependencies in your p
   end
 ```
 
-#### Using certificate device authentication
+### Connecting your device to NervesHub
 
-**Important: This is recommended for production device fleets.**
+#### Certificate device authentication
+
+_Important: This is recommended for production device fleets._
 
 The following example shows how to configure NervesHubLink to use certificates for device authentication:
 
@@ -66,17 +61,15 @@ config :nerves_hub_link,
   ]
 ```
 
-You can also provide your own options to use for the NervesHub socket connection via the `:socket` and `:ssl` keys, which are forwarded on to `phoenix_client` when creating the socket connection (see [`PhoenixClient.Socket` module](https://github.com/mobileoverlord/phoenix_client/blob/main/lib/phoenix_client/socket.ex#L57-L91) for support options.
+For more information on how to generate device certificates, please read the  ["Initializing devices"](#initializing-devices) section.
 
-Any [valid Erlang ssl socket option](http://erlang.org/doc/man/ssl.html#TLS/DTLS%20OPTION%20DESCRIPTIONS%20-%20COMMON%20for%20SERVER%20and%20CLIENT) can go in the `:ssl` key.
+#### Shared secret device authentication (experimental)
 
-#### Using shared secret device authentication (experimental)
-
-**Important: Shared Secret authentication is a new feature under active development.**
+_Important: Shared Secret authentication is a new feature under active development._
 
 Shared Secrets use [HMAC](https://en.wikipedia.org/wiki/HMAC) cryptography to generate an authentication token used during websocket connection.
 
-This been built with simple device registration in mind, an ideal fit for hobby projects or projects under early R&D.
+This has been built with simple device registration in mind, an ideal fit for hobby projects or projects under early R&D.
 
 You can generate a key and secret in your NervesHub Product settings which you then include in your NervesHubLink settings.
 
@@ -94,7 +87,7 @@ config :nerves_hub_link,
   ]
 ```
 
-#### Using NervesKey (with cert based auth)
+#### NervesKey (with cert based auth)
 
 If your project is using [NervesKey](https://github.com/nerves-hub/nerves_key), you can tell `NervesHubLink` to read those certificates and key from the chip and assign the SSL options for you by enabling add it as a dependency:
 
@@ -119,13 +112,17 @@ config :nerves_hub_link,
   device_api_host: "your.nerveshub.host"
 ```
 
+#### Additional notes
+
+Any [valid Erlang ssl socket option](http://erlang.org/doc/man/ssl.html#TLS/DTLS%20OPTION%20DESCRIPTIONS%20-%20COMMON%20for%20SERVER%20and%20CLIENT) can go in the `:ssl` key. These options are passed to [Mint](https://hex.pm/packages/mint) by [Slipstream](https://hex.pm/packages/slipstream), which `NervesHubLink` uses for websocket connections.
+
 ### Runtime configuration
 
 `NervesHubLink` also supports runtime configuration via the `NervesHubLink.Configurator` behavior. This is called during application startup to build the configuration that is to be used for the connection. When implementing the behavior, you'll receive the initial default config read in from the application environment and you can modify it however you need.
 
 This is useful for cases like:
 - selectively choosing which cert/key to use
-- reading a file stored on the device which isn't available during compilation
+- reading a certificate file stored on the device which isn't available during compilation
 
 For example:
 
@@ -209,7 +206,7 @@ config :nerves_hub_link,
   ]
 ```
 
-### Publishing firmware
+#### Publishing firmware
 
 Uploading firmware to NervesHub is called publishing. To publish firmware start by calling:
 
@@ -306,6 +303,8 @@ We can publish, sign, and deploy firmware in a single command now.
 mix nerves_hub.firmware publish --key devkey --deploy qa_deployment
 ```
 
+## Advanced features
+
 ### Conditionally applying updates
 
 It's not always appropriate to apply a firmware update immediately. Custom logic can be added to the device by implementing the `NervesHubLink.Client` behaviour and telling the NervesHubLink OTP application about it.
@@ -392,7 +391,18 @@ config :nerves_hub_link, remote_iex_timeout: 900 # 15 minutes
 
 You may also need additional permissions on NervesHub to see the device and to use the remote IEx feature.
 
-## CA Certificates
+### Alarms
+
+This application can set and clear the following alarms:
+
+* `NervesHubLink.Disconnected`
+  * set: An issue is preventing a connection to NervesHub or one just hasn't been made yet
+  * clear: Currently connected to NervesHub
+* `NervesHubLink.UpdateInProgress`
+  * set: A new firmware update is being downloaded or applied
+  * clear: No updates are happening
+
+### CA Certificates
 
 The CA certificates installed on the device are used by default.
 
